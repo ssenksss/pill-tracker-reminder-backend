@@ -7,6 +7,8 @@ import usersRoutes from './routes/usersRoutes';
 import pillsRoutes from './routes/pillsRoutes';
 import pillLogsRoutes from './routes/pillLogsRoutes';
 
+import pool from './config/db';
+
 dotenv.config();
 
 const app = express();
@@ -14,7 +16,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
-
 
 app.use('/api/users', usersRoutes);
 app.use('/api/pills', pillsRoutes);
@@ -26,6 +27,18 @@ app.get('/health', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-    console.log(`Server pokrenut na portu ${PORT}`);
+
+async function testDBConnection() {
+    try {
+        const connection = await pool.getConnection();
+        console.log('Database connected successfully');
+        connection.release();
+    } catch (error) {
+        console.error('Database connection failed:', error);
+    }
+}
+
+app.listen(PORT, async () => {
+    console.log(`Server running on port ${PORT}`);
+    await testDBConnection();
 });

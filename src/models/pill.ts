@@ -7,7 +7,7 @@ const router = Router()
 router.get('/', async (req, res) => {
     try {
         const [rows] = await pool.execute(
-            'SELECT id, name, dosage, frequency, time, note, image FROM pills'
+            'SELECT id, name, dosage, frequency, time, note, image,count FROM pills'
         )
         res.json(rows)
     } catch (error) {
@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
         const { name, dosage, frequency, time, note, image } = req.body
 
         const [result] = await pool.execute(
-            `INSERT INTO pills (name, dosage, frequency, time, note, image)
+            `INSERT INTO pills (name, dosage, frequency, time, note, image,count)
        VALUES (?, ?, ?, ?, ?, ?)`,
             [name, dosage, frequency, time, note, image]
         )
@@ -49,7 +49,7 @@ router.put('/:id', async (req, res) => {
         const { name, dosage, frequency, time, note, image } = req.body
 
         const [result] = await pool.execute(
-            `UPDATE pills SET name = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ? WHERE id = ?`,
+            `UPDATE pills SET name = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ?,count = ? WHERE id = ?`,
             [name, dosage, frequency, time, note, image, id]
         )
 
