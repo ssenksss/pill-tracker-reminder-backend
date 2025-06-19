@@ -1,5 +1,5 @@
 import express from 'express';
-import { PillLogsController } from '../controllers/PillLogsController';
+import { PillLogsController } from '../controllers/pillLogsController';
 
 const router = express.Router();
 

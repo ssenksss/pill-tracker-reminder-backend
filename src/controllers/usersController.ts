@@ -18,17 +18,17 @@ export class UsersController {
         try {
             const { email, password } = req.body;
 
-            // Provera da li korisnik već postoji
+
             const [existingUsers]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
             if (existingUsers.length > 0) {
                 return res.status(400).json({ message: 'Korisnik sa ovim emailom već postoji' });
             }
 
-            // Hash lozinke
+
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            // Ubacivanje korisnika u bazu
+
             const [result]: any = await pool.query(
                 'INSERT INTO users (email, password) VALUES (?, ?)',
                 [email, hashedPassword]
@@ -49,7 +49,7 @@ export class UsersController {
         try {
             const { email, password } = req.body;
 
-            // Pronalaženje korisnika po emailu
+
             const [users]: any = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
             if (users.length === 0) {
                 return res.status(400).json({ message: 'Pogrešan email ili lozinka' });
@@ -57,13 +57,13 @@ export class UsersController {
 
             const user = users[0];
 
-            // Provera lozinke
+
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
                 return res.status(400).json({ message: 'Pogrešan email ili lozinka' });
             }
 
-            // Kreiranje JWT tokena
+
             const token = jwt.sign(
                 { userId: user.id, email: user.email },
                 process.env.JWT_SECRET as string,

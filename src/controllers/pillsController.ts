@@ -1,12 +1,10 @@
 import { Request, Response } from 'express';
 import pool from '../config/db';
-import { Pill } from '../models/pill';
 
 export class PillsController {
     static async getAllPills(req: Request, res: Response) {
         try {
             const [rows] = await pool.query('SELECT * FROM pills');
-            console.log('Lekovi iz baze:', rows);
             res.json(rows);
         } catch (error) {
             res.status(500).json({ message: 'Greška prilikom dohvata lekova', error });
@@ -30,9 +28,10 @@ export class PillsController {
 
     static async createPill(req: Request, res: Response) {
         try {
-            const pill: Pill = req.body;
+            const pill = req.body;
             const [result]: any = await pool.query(
-                'INSERT INTO pills (user_id, name, dosage, frequency, time, note) VALUES (?, ?, ?, ?, ?, ?)',
+                `INSERT INTO pills (user_id, name, dosage, frequency, time, note, image)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 [
                     pill.user_id || null,
                     pill.name,
@@ -40,25 +39,23 @@ export class PillsController {
                     pill.frequency || null,
                     pill.time || null,
                     pill.note || null,
-                ],
+                    pill.image || null,
+                ]
             );
 
             res.status(201).json({ message: 'Lek dodat', id: result.insertId });
         } catch (error) {
-            console.error('GREŠKA u createPill:', error);
             res.status(500).json({ message: 'Greška prilikom dodavanja leka', error });
         }
     }
 
-
-
     static async updatePill(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const pill: Pill = req.body;
+            const pill = req.body;
 
             const [result]: any = await pool.query(
-                'UPDATE pills SET user_id = ?, name = ?, dosage = ?, frequency = ?, time = ?, note = ? WHERE id = ?',
+                `UPDATE pills SET user_id = ?, name = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ? WHERE id = ?`,
                 [
                     pill.user_id || null,
                     pill.name,
@@ -66,8 +63,9 @@ export class PillsController {
                     pill.frequency || null,
                     pill.time || null,
                     pill.note || null,
+                    pill.image || null,
                     id,
-                ],
+                ]
             );
 
             if (result.affectedRows === 0) {

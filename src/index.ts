@@ -13,12 +13,12 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
 app.use(morgan('combined'));
+
+
 app.use('/api/users', usersRoutes);
 app.use('/api/pills', pillsRoutes);
 app.use('/api/pill-logs', pillLogsRoutes);
-
 
 app.get('/health', (req, res) => {
     res.json({ status: 'OK' });
