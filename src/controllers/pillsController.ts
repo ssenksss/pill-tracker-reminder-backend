@@ -58,7 +58,7 @@ export class PillsController {
             const pill = req.body;
 
             const [result]: any = await pool.query(
-                `UPDATE pills 
+                `UPDATE pills
                  SET user_id = ?, name = ?, description = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ?, count = ?
                  WHERE id = ?`,
                 [
