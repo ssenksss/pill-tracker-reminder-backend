@@ -29,17 +29,20 @@ export class PillsController {
     static async createPill(req: Request, res: Response) {
         try {
             const pill = req.body;
+
             const [result]: any = await pool.query(
-                `INSERT INTO pills (user_id, name, dosage, frequency, time, note, image)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                `INSERT INTO pills (user_id, name, description, dosage, frequency, time, note, image, count)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     pill.user_id || null,
                     pill.name,
+                    pill.description || null,
                     pill.dosage || null,
                     pill.frequency || null,
                     pill.time || null,
                     pill.note || null,
                     pill.image || null,
+                    pill.count || null,
                 ]
             );
 
@@ -55,15 +58,19 @@ export class PillsController {
             const pill = req.body;
 
             const [result]: any = await pool.query(
-                `UPDATE pills SET user_id = ?, name = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ? WHERE id = ?`,
+                `UPDATE pills 
+                 SET user_id = ?, name = ?, description = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ?, count = ?
+                 WHERE id = ?`,
                 [
                     pill.user_id || null,
                     pill.name,
+                    pill.description || null,
                     pill.dosage || null,
                     pill.frequency || null,
                     pill.time || null,
                     pill.note || null,
                     pill.image || null,
+                    pill.count || null,
                     id,
                 ]
             );
