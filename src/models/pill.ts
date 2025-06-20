@@ -15,7 +15,6 @@ router.get('/', async (req, res) => {
     }
 })
 
-
 router.post('/', async (req, res) => {
     try {
         const { name, description, dosage, frequency, time, note, image, count } = req.body
@@ -43,27 +42,26 @@ router.post('/', async (req, res) => {
     }
 })
 
-
 router.put('/:id', async (req, res) => {
     try {
-        const { id } = req.params;
-        const { name, description, dosage, frequency, time, note, image, count } = req.body;
+        const { id } = req.params
+        const { name, description, dosage, frequency, time, note, image, count } = req.body
 
         const [result] = await pool.execute(
             `UPDATE pills SET name = ?, description = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ?, count = ? WHERE id = ?`,
             [name, description, dosage, frequency, time, note, image, count, id]
-        );
+        )
 
         if ((result as any).affectedRows === 0) {
-            return res.status(404).json({ message: 'Pill not found' });
+            return res.status(404).json({ message: 'Pill not found' })
         }
 
-        res.json({ id, name, description, dosage, frequency, time, note, image, count });
+        res.json({ id, name, description, dosage, frequency, time, note, image, count })
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error(error)
+        res.status(500).json({ message: 'Server error' })
     }
-});
+})
 
 router.delete('/:id', async (req, res) => {
     try {
