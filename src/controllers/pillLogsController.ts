@@ -26,13 +26,40 @@ export class PillLogsController {
             res.status(500).json({ message: 'Greška prilikom dohvata loga', error });
         }
     }
+    static async getLogsByUser(req: Request, res: Response) {
+        const { id } = req.params; // userId
+        try {
+            const [rows] = await pool.query(
+                `SELECT pl.id, pl.time_taken,
+                        UPPER(LEFT(pl.status, 1)) + LOWER(SUBSTRING(pl.status, 2)) as status,
+                        p.name
+                 FROM pill_logs pl
+                          JOIN pills p ON pl.pill_id = p.id
+                 WHERE pl.user_id = ?
+                 ORDER BY pl.time_taken DESC`,
+                [id]
+            );
+
+            res.json(rows);
+        } catch (error) {
+            res.status(500).json({ message: 'Greška prilikom dohvata logova korisnika', error });
+        }
+    }
+
 
     static async createLog(req: Request, res: Response) {
         try {
             const log: PillLog = req.body;
+
+            if (!log.user_id || !log.pill_id || !log.status) {
+                return res.status(400).json({ message: 'Nedostaju obavezni podaci' });
+            }
+
+            // INSERT u bazu; time_taken će default biti current_timestamp ako si to podesila
             const [result]: any = await pool.query(
-                'INSERT INTO pill_logs (pill_id, taken_at, status) VALUES (?, ?, ?)',
-                [log.pill_id, log.taken_at, log.status]
+                `INSERT INTO pill_logs (user_id, pill_id, status)
+             VALUES (?, ?, ?)`,
+                [log.user_id, log.pill_id, log.status]
             );
 
             res.status(201).json({ message: 'Log dodat', id: result.insertId });
@@ -41,14 +68,15 @@ export class PillLogsController {
         }
     }
 
+
     static async updateLog(req: Request, res: Response) {
         try {
             const { id } = req.params;
             const log: PillLog = req.body;
 
             const [result]: any = await pool.query(
-                'UPDATE pill_logs SET pill_id = ?, taken_at = ?, status = ? WHERE id = ?',
-                [log.pill_id, log.taken_at, log.status, id]
+                'UPDATE pill_logs SET pill_id = ?, time_taken = ?, status = ? WHERE id = ?',
+                [log.pill_id, log.time_taken, log.status, id]
             );
 
             if (result.affectedRows === 0) {
@@ -60,6 +88,7 @@ export class PillLogsController {
             res.status(500).json({ message: 'Greška prilikom izmene loga', error });
         }
     }
+
 
     static async deleteLog(req: Request, res: Response) {
         try {

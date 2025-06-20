@@ -100,4 +100,29 @@ export class PillsController {
             res.status(500).json({ message: 'Greška prilikom brisanja leka', error });
         }
     }
+    static async getTodaysReminders(req: Request, res: Response) {
+        try {
+
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = (today.getMonth() + 1).toString().padStart(2, '0');
+            const day = today.getDate().toString().padStart(2, '0');
+
+
+            const startOfDay = `${year}-${month}-${day} 00:00:00`;
+            const endOfDay = `${year}-${month}-${day} 23:59:59`;
+
+            const [rows]: any = await pool.query(
+                `SELECT id, user_id, name, description, dosage, frequency, time, note, image, count
+             FROM pills
+             WHERE time BETWEEN ? AND ?`,
+                [startOfDay, endOfDay]
+            );
+
+            res.json(rows);
+        } catch (error) {
+            res.status(500).json({ message: 'Greška prilikom dohvata dnevnih podsetnika', error });
+        }
+    }
+
 }
