@@ -30,9 +30,22 @@ export class PillsController {
         try {
             const pill = req.body
 
+            if (!pill.user_id || !pill.name || !pill.time) {
+                return res.status(400).json({ message: 'Nedostaju obavezni podaci' })
+            }
+
+            const [existing]: any = await pool.query(
+                `SELECT id FROM pills WHERE user_id = ? AND name = ? AND time = ?`,
+                [pill.user_id, pill.name, pill.time]
+            )
+
+            if (existing.length > 0) {
+                return res.status(409).json({ message: 'Lek sa istim vremenom već postoji za ovog korisnika' })
+            }
+
             const [result]: any = await pool.query(
                 `INSERT INTO pills (user_id, name, description, dosage, frequency, time, note, image, count)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     pill.user_id || null,
                     pill.name,
@@ -48,9 +61,14 @@ export class PillsController {
 
             res.status(201).json({ message: 'Lek dodat', id: result.insertId })
         } catch (error) {
+            if ((error as any).code === 'ER_DUP_ENTRY') {
+                return res.status(409).json({ message: 'Duplikat leka - već postoji isti unos' })
+            }
+
             res.status(500).json({ message: 'Greška prilikom dodavanja leka', error })
         }
     }
+
 
     static async updatePill(req: Request, res: Response) {
         try {

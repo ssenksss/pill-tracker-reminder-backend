@@ -12,11 +12,15 @@ export class AlertsController {
 
             const [rows]: any = await pool.query(
                 `SELECT p.id, p.name, p.dosage, p.time, p.note, p.image, p.count,
-                        pl.status, pl.taken_at
-                 FROM pills p
-                          LEFT JOIN pill_logs pl
-                                    ON p.id = pl.pill_id AND DATE(pl.taken_at) = ?
-                 WHERE p.time IS NOT NULL`,
+                    pl.status, pl.taken_at
+             FROM pills p
+                      LEFT JOIN pill_logs pl
+                                ON p.id = pl.pill_id AND pl.taken_at = (
+                                    SELECT MAX(taken_at)
+                                    FROM pill_logs
+                                    WHERE pill_id = p.id AND DATE(taken_at) = ?
+                                )
+             WHERE p.time IS NOT NULL`,
                 [todayDate]
             )
 
@@ -26,4 +30,5 @@ export class AlertsController {
             res.status(500).json({ message: 'Greška u alerts endpointu', error })
         }
     }
+
 }
