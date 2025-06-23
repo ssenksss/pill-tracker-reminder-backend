@@ -11,16 +11,15 @@ dotenv.config()
 
 const app = express()
 
-// Middleware
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
 
-// API Routes
+
 app.use('/api/pills', pillsRoutes)
 app.use('/api/pill-logs', pillLogsRoutes)
 
-// 🔁 Test konekcije
+
 async function testDBConnection() {
     try {
         await pool.query('SELECT 1')
@@ -30,7 +29,7 @@ async function testDBConnection() {
     }
 }
 
-// ✅ Ruta: /api/pills/today
+
 app.get('/api/pills/today', async (req: Request, res: Response) => {
     try {
         const userId = 1
@@ -65,7 +64,7 @@ app.get('/api/pills/today', async (req: Request, res: Response) => {
     }
 })
 
-// ✅ Ruta: /api/pill_logs (POST log zapisa)
+
 app.post('/api/pill_logs', async (req: Request, res: Response) => {
     try {
         const { pill_id, user_id, status, taken_at } = req.body
@@ -93,7 +92,6 @@ app.post('/api/pill_logs', async (req: Request, res: Response) => {
     }
 })
 
-// ✅ Ruta: /api/dashboard/today
 app.get('/api/dashboard/today', async (req: Request, res: Response) => {
     try {
         const today = new Date().toISOString().slice(0, 10)
@@ -117,7 +115,7 @@ app.get('/api/dashboard/today', async (req: Request, res: Response) => {
     }
 })
 
-// Pokreni server
+
 const PORT = process.env.PORT || 3000
 app.listen(PORT, async () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`)

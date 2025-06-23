@@ -22,6 +22,7 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+
 let pills: Pill[] = [
     {
         id: 1,
@@ -37,36 +38,8 @@ let pills: Pill[] = [
     },
 ]
 
-app.get('/api/pills', (req: Request, res: Response) => {
-    res.json(pills)
-})
 
-app.get('/api/pills/:id', (req: Request, res: Response) => {
-    const pill = pills.find((p) => p.id === parseInt(req.params.id))
-    if (pill) res.json(pill)
-    else res.status(404).json({ message: 'Pill not found' })
-})
-
-app.post('/api/pills', (req: Request, res: Response) => {
-    const newPill: Pill = {
-        id: pills.length + 1,
-        ...req.body,
-    }
-    pills.push(newPill)
-    res.status(201).json(newPill)
-})
-
-app.put('/api/pills/:id', (req: Request, res: Response) => {
-    const index = pills.findIndex((p) => p.id === parseInt(req.params.id))
-    if (index !== -1) {
-        pills[index] = { ...pills[index], ...req.body }
-        res.json(pills[index])
-    } else {
-        res.status(404).json({ message: 'Pill not found' })
-    }
-})
-
-app.post('/pill_logs', async (req: Request, res: Response) => {
+app.post('/api/pill_logs', async (req: Request, res: Response) => {
     try {
         const { pill_id, taken_at } = req.body
 
@@ -88,6 +61,28 @@ app.post('/pill_logs', async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Server error' })
     }
 })
+
+
+app.get('/api/alerts/today', async (req: Request, res: Response) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10) // yyyy-mm-dd
+
+        const [rows]: any = await pool.query(
+            `SELECT p.id, p.name, p.dosage, p.time, p.note, p.image, p.count,
+                    pl.status, pl.taken_at
+             FROM pills p
+             LEFT JOIN pill_logs pl ON p.id = pl.pill_id AND DATE(pl.taken_at) = ?
+             WHERE p.time IS NOT NULL`,
+            [today]
+        )
+
+        res.json(rows)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Greška u alerts endpointu', error })
+    }
+})
+
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {

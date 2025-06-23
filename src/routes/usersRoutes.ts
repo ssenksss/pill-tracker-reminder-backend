@@ -8,8 +8,6 @@ const router = express.Router()
 
 router.post('/register', userRegisterValidation, UsersController.register)
 router.post('/login', userLoginValidation, UsersController.login)
-
-
 router.get('/', authenticateToken, UsersController.getAllUsers)
 router.get('/:id', authenticateToken, UsersController.getUserById)
 router.post('/', authenticateToken, UsersController.createUser)
