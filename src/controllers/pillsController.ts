@@ -1,7 +1,9 @@
+// --pillsController--
 import { Request, Response } from 'express'
 import pool from '../config/db'
 
 export class PillsController {
+    // Dohvata sve lekove iz baze
     static async getAllPills(req: Request, res: Response) {
         try {
             const [rows] = await pool.query('SELECT * FROM pills')
@@ -10,6 +12,8 @@ export class PillsController {
             res.status(500).json({ message: 'Greška prilikom dohvata lekova', error })
         }
     }
+
+    // Dohvata lekove korisnika i poslednji log unosa leka (status i vreme poslednje upotrebe)
     static async getPillsWithLastTaken(req: Request, res: Response) {
         try {
             const userId = req.query.user_id ? Number(req.query.user_id) : null;
@@ -19,16 +23,16 @@ export class PillsController {
 
             const [rows]: any = await pool.query(
                 `SELECT p.*,
-              pl.taken_at AS last_taken,
-              pl.status AS last_status
-       FROM pills p
-       LEFT JOIN pill_logs pl ON pl.pill_id = p.id
-                              AND pl.taken_at = (
-                                SELECT MAX(taken_at)
-                                FROM pill_logs
-                                WHERE pill_id = p.id AND status = 'uzeto'
-                              )
-       WHERE p.user_id = ?`,
+                        pl.taken_at AS last_taken,
+                        pl.status AS last_status
+                 FROM pills p
+                 LEFT JOIN pill_logs pl ON pl.pill_id = p.id
+                 AND pl.taken_at = (
+                     SELECT MAX(taken_at)
+                     FROM pill_logs
+                     WHERE pill_id = p.id AND status = 'uzeto'
+                 )
+                 WHERE p.user_id = ?`,
                 [userId]
             );
 
@@ -39,6 +43,7 @@ export class PillsController {
         }
     }
 
+    // Dohvata lek po ID-ju
     static async getPillById(req: Request, res: Response) {
         try {
             const { id } = req.params
@@ -54,20 +59,21 @@ export class PillsController {
         }
     }
 
+    // Kreira novi lek
     static async createPill(req: Request, res: Response) {
         try {
             const pill = req.body;
 
             const [result]: any = await pool.query(
                 `INSERT INTO pills (user_id, name, description, dosage, frequency, time, note, image, count)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     pill.user_id || null,
                     pill.name,
                     pill.description || null,
                     pill.dosage || null,
                     pill.frequency || null,
-                    JSON.stringify(pill.time || []),
+                    JSON.stringify(pill.time || []), // vremena se čuvaju kao JSON niz
                     pill.note || null,
                     pill.image || null,
                     pill.count || null,
@@ -80,6 +86,7 @@ export class PillsController {
         }
     }
 
+    // Ažurira postojeći lek
     static async updatePill(req: Request, res: Response) {
         try {
             const { id } = req.params;
@@ -87,8 +94,8 @@ export class PillsController {
 
             const [result]: any = await pool.query(
                 `UPDATE pills
-             SET user_id = ?, name = ?, description = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ?, count = ?
-             WHERE id = ?`,
+                 SET user_id = ?, name = ?, description = ?, dosage = ?, frequency = ?, time = ?, note = ?, image = ?, count = ?
+                 WHERE id = ?`,
                 [
                     pill.user_id || null,
                     pill.name,
@@ -113,7 +120,7 @@ export class PillsController {
         }
     }
 
-
+    // Briše lek iz baze
     static async deletePill(req: Request, res: Response) {
         try {
             const { id } = req.params
@@ -130,9 +137,9 @@ export class PillsController {
         }
     }
 
+    // Dohvata lekove za koje postoji termin u narednih 30 minuta (kao podsetnik)
     static async getTodaysReminders(req: Request, res: Response) {
         try {
-
             const userId = req.query.user_id ? Number(req.query.user_id) : null;
             if (!userId) {
                 return res.status(400).json({ message: 'Nedostaje user_id u query' });
@@ -140,8 +147,8 @@ export class PillsController {
 
             const [rows]: any = await pool.query(
                 `SELECT id, user_id, name, description, dosage, frequency, time, note, image, count
-             FROM pills
-             WHERE user_id = ?`,
+                 FROM pills
+                 WHERE user_id = ?`,
                 [userId]
             )
 
@@ -157,6 +164,7 @@ export class PillsController {
                     return false;
                 }
 
+                // proverava da li je neki termin u sledećih 30 minuta
                 return times.some(timeStr => {
                     const [h, m] = timeStr.split(':').map(Number);
                     if (isNaN(h) || isNaN(m)) return false;
@@ -170,6 +178,4 @@ export class PillsController {
             res.status(500).json({ message: 'Greška prilikom dohvata dnevnih podsetnika', error });
         }
     }
-
-
 }
